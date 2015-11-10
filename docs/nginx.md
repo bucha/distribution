@@ -99,6 +99,32 @@ server {
   # required to avoid HTTP 411: see Issue #1486 (https://github.com/docker/docker/issues/1486)
   chunked_transfer_encoding on;
 
+  location / {
+    auth_basic              "Registry realm";
+    auth_basic_user_file    /etc/nginx/conf.d/nginx.htpasswd;
+
+    proxy_pass http://docker-registry;
+    proxy_set_header      Host           \$http_host;
+    proxy_set_header      X-Real-IP      \$remote_addr;
+    proxy_set_header      Authorization  "";
+  }
+
+  location /_ping {
+    auth_basic off;
+    proxy_set_header      Host           \$http_host;
+    proxy_set_header      X-Real-IP      \$remote_addr;
+    proxy_set_header      Authorization  "";
+    proxy_pass http://docker-registry;
+  }
+
+  location /v1/_ping {
+    auth_basic off;
+    proxy_pass http://docker-registry;
+    proxy_set_header      Host           \$http_host;
+    proxy_set_header      X-Real-IP      \$remote_addr;
+    proxy_set_header      Authorization  "";
+  }
+
   location /v2/ {
     # Do not allow connections from docker 1.5 and earlier
     # docker pre-1.6.0 did not properly set the user agent on ping, catch "Go *" user agents
